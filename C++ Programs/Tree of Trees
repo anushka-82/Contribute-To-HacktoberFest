@@ -1,0 +1,156 @@
+#include <iostream>
+#include <bits/stdc++.h>
+
+// C++ program to answer queries to count number
+// of elements smaller than or equal to x.
+#include<bits/stdc++.h>
+#define ll long long int
+using namespace std;
+
+struct node {
+	vector<pair<ll,ll>> children;
+};
+
+#define MAXN 10001
+#define MAXM 50001
+
+node nodes[MAXM];
+ll cc[MAXM];
+ll av[MAXM];
+ll minNodes[MAXN];
+ll ai[MAXN-1];
+ll mi[MAXN];
+ll MOD=998244353;
+int cur_id;
+
+ll sum = 0;
+
+void dfswt(int node, int par = 0){
+	cc[node]++;
+	for(auto x:nodes[node].children){
+		if (x.first != par) {
+			dfswt(x.first, node);
+			cc[node]+=cc[x.first];
+			
+			// each  edge contributes 
+			// to the 
+			av[node]+=x.second*cc[x.first] + av[x.first];
+			
+			sum += x.second * cc[x.first] * (mi[cur_id] - cc[x.first]);
+            sum %= MOD;
+		}
+	}
+
+
+}
+
+
+void dfs(int node, int par = 0){
+	//cout << root << "-"<< nodes[root].childCount << "-"<< nodes[root].allVal << "allval\n";
+	minNodes[cur_id] = min(minNodes[cur_id],av[node]);
+		
+	for(auto x:nodes[node].children){
+		if (x.first != par){
+			av[x.first]=av[node] + (mi[cur_id]-2*cc[x.first]) * x.second;
+			//av[x.first]%=MOD;
+		
+			dfs(x.first, node);
+		}
+	}
+}
+
+void solve(){
+	string s="", out="";
+	int n;
+	cin >> n;
+	//n = 200;
+	
+	ll miSum = 0;
+	
+	for(int i = 0; i<n;i++){
+		cin >> mi[i];
+
+		//mi[i] = i+1;
+			
+		miSum+=mi[i];
+		int root=-1;
+		for(int j = 0;j<mi[i]-1;j++){
+			int a, b, c;
+			cin >> a >> b >> c;
+		//	a=j+1; //1, ..
+		//	b=a+1; // 2
+		//	c=b*1000; // 2000
+			
+			if (root == -1)
+				root = a;
+			nodes[b].children.push_back({a,c});
+			nodes[a].children.push_back({b,c});
+		}
+		
+		cur_id = i;		
+		
+		dfswt(1, 0);		
+		
+		minNodes[i]=1e18;
+
+		dfs(1);
+		
+		for(int j = 1;j<=mi[i];j++){
+			nodes[j].children.clear();
+			av[j]=0;
+			cc[j]=0;
+		}
+		
+		//cout << minNodes[i] << "\n";
+	}
+
+	//cout << n;
+
+	for(int i = 0; i<n-1;i++)
+		cin >> ai[i];
+		//ai[i] = (i+1)*1000;
+		
+	ll s1= 0;
+	for (int i = 0; i < n;i++){
+		minNodes[i]%=MOD;
+		s1+=minNodes[i]*(miSum-mi[i]);
+		s1%=MOD;
+	}
+
+	sort(ai, ai+n-1);
+	sort(mi,mi+n);
+	reverse(ai, ai+n-1);
+	//sort(mi,mi+n, greater<int>());
+	
+
+	//cout << sum << "-";
+	// 4*4 + 4*3*1 + 6*3 = 16 + 12+18 = 46
+	sum+=s1;
+	sum%=MOD;
+	
+	for (int i = 0; i < n - 1; i++)
+    {
+        sum += ai[i] * mi[i] * (miSum - mi[i]);
+        sum%=MOD;
+    }
+    
+	cout << sum /*<< "-" << s1 << "-" << gsum/2*/;
+	
+}
+
+
+
+int main(){
+	ios::sync_with_stdio(0);
+	cin.tie(0);
+	cout.tie(0);
+	
+	int  t;
+	//cin>> t;
+	t = 1;
+	while(t--){
+		solve();
+		cout << '\n';
+	}
+	return 0;
+}
